@@ -5,17 +5,10 @@ import Register, {
 } from "./features/identity/components/register";
 import IdentityLayout from "./layouts/identity-layout";
 import MainLayout from "./layouts/main-layout";
-import Config from "./pages/config";
 const router: any = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
-    children: [
-      {
-        element: <Config />,
-        index: true,
-      },
-    ],
   },
   {
     element: <IdentityLayout />,
