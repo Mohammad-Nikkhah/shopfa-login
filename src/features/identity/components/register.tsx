@@ -7,7 +7,6 @@ import {
   useNavigation,
   useSubmit,
 } from "react-router-dom";
-import { httpservice } from "../../../core/http-service";
 import { useEffect } from "react";
 
 // typescript => define interface for form Register
@@ -39,7 +38,7 @@ const Register: React.FC = () => {
   };
 
   const navigation = useNavigation();
-  const isSubmitting = navigation.state !== FormState.Idle; // state form  states (idle,submitting,loading)
+  const isSubmitting = navigation.state !== FormState.Idle; // state form  states (idle, submitting, loading)
   const isSuccessOperation = useActionData(); // check submit successfully
   const navigate = useNavigate(); //  for redirect to other page
   useEffect(() => {
@@ -49,6 +48,7 @@ const Register: React.FC = () => {
       }, 2000);
     }
   }, [isSuccessOperation]);
+
   return (
     <>
       <div className="text-center mt-4">
@@ -76,10 +76,9 @@ const Register: React.FC = () => {
                 />
                 {errors.mobile && errors.mobile.type === "required" && (
                   <p className="text-danger small mt-1 fw-bolder">
-                    {errors.mobile?.message &&
-                      typeof errors.mobile.message === "string" && (
-                        <span>{errors.mobile.message}</span>
-                      )}
+                    {errors.mobile?.message && (
+                      <span>{errors.mobile.message}</span>
+                    )}
                   </p>
                 )}
               </div>
@@ -90,18 +89,17 @@ const Register: React.FC = () => {
                     required: "رمز الزامی است",
                     minLength: {
                       value: 8,
-                      message: "",
+                      message: "رمز عبور باید حداقل ۸ کاراکتر باشد",
                     },
                   })}
                   type="password"
                   className={`form-control ${errors.password && "is-invalid"}`}
                 />
-                {errors.password && errors.password.type == "required" && (
+                {errors.password && errors.password.type === "required" && (
                   <p className="text-danger mt-1 small fw-bolder">
-                    {errors.password?.message &&
-                      typeof errors.password.message === "string" && (
-                        <span>{errors.password.message}</span>
-                      )}
+                    {errors.password?.message && (
+                      <span>{errors.password.message}</span>
+                    )}
                   </p>
                 )}
               </div>
@@ -110,35 +108,21 @@ const Register: React.FC = () => {
                 <input
                   {...register("confirmpassword", {
                     required: "تکرار رمز عبور الزامی است",
-                    validate: (value) => {
-                      if (watch("password") !== value) {
-                        return "عدم تطابق با رمز عبور";
-                      }
-                    },
+                    validate: (value) =>
+                      value === watch("password") || "عدم تطابق با رمز عبور",
                   })}
                   type="password"
                   className={`form-control ${
                     errors.confirmpassword && "is-invalid"
                   }`}
                 />
-                {errors.confirmpassword &&
-                  errors.confirmpassword.type == "required" && (
-                    <p className="text-danger mt-1 small fw-bolder">
-                      {errors.confirmpassword?.message &&
-                        typeof errors.confirmpassword.message === "string" && (
-                          <span>{errors.confirmpassword.message}</span>
-                        )}
-                    </p>
-                  )}
-                {errors.confirmpassword &&
-                  errors.confirmpassword.type === "validate" && (
-                    <p className="text-danger mt-1 small fw-bolder">
-                      {errors.confirmpassword?.message &&
-                        typeof errors.confirmpassword.message === "string" && (
-                          <span>{errors.confirmpassword.message}</span>
-                        )}
-                    </p>
-                  )}
+                {errors.confirmpassword && (
+                  <p className="text-danger mt-1 small fw-bolder">
+                    {errors.confirmpassword?.message && (
+                      <span>{errors.confirmpassword.message}</span>
+                    )}
+                  </p>
+                )}
               </div>
               <div className="text-center mt-3">
                 <button
@@ -170,8 +154,24 @@ export async function registerAction({
   request: Request;
 }): Promise<boolean> {
   const formData = await request.formData();
-  const data: Record<string, any> = Object.fromEntries(formData); // convert form data to object
-  const response: Response = await httpservice.post("/Users", data); // send data to server
-  console.log(response.status);
-  return response.status === 200;
+  const data: Record<string, any> = Object.fromEntries(formData);
+  try {
+    const response = await fetch(
+      "https://react-mini-projects-api.classbon.com/Users",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.status === 200;
+  } catch (error) {
+    console.error("Error during registration:", error);
+    return false;
+  }
 }

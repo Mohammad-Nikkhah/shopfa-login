@@ -2,7 +2,7 @@ import React from "react";
 import Logo from "@assets/images/logo.webp";
 import { Link, redirect, useSubmit, useNavigation } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { httpservice } from "../../../core/http-service";
+import { httpservicefetch } from "../../../core/http-service";
 
 const Login: React.FC = () => {
   const {
@@ -92,7 +92,7 @@ export default Login;
 export async function loginAction({ request }: any) {
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
-  const response = await httpservice.post("Users/login", data);
+  const response = await httpservicefetch.post("Users/login", data);
 
   if (response.status === 200) {
     localStorage.setItem("token", response?.data.token);
