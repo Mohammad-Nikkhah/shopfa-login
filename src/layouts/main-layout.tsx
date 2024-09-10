@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Logo from "@assets/images/logo-sidebar.png";
-import Config from "../pages/config";
+import Config from "../pages/Config";
 const MainLayout: React.FC = () => {
   const [collapseSidebar, setCollapseSidebar] = useState(false);
 

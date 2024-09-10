@@ -1,5 +1,5 @@
 import { createBrowserRouter } from "react-router-dom";
-import Login, { loginAction } from "./features/identity/components/login";
+import LoginAuth from "./features/identity/components/login-auth";
 import Register, {
   registerAction,
 } from "./features/identity/components/register";
@@ -15,8 +15,8 @@ const router: any = createBrowserRouter([
     children: [
       {
         path: "/login",
-        element: <Login />,
-        action: loginAction,
+        element: <LoginAuth />,
+        // action: loginAction,
       },
       {
         path: "/register",
