@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Logo from "@assets/images/logo-sidebar.png";
-import Config from "../pages/Config";
+import Registration from "../pages/Registration";
+import "../index.css";
 const MainLayout: React.FC = () => {
   const [collapseSidebar, setCollapseSidebar] = useState(false);
 
@@ -10,7 +11,7 @@ const MainLayout: React.FC = () => {
       style={{ minHeight: "100vh", overflowX: "hidden" }}
     >
       <nav className={`sidebar ${collapseSidebar ? "collapsed" : ""} `}>
-        <div className="sidebar-content" style={{ height: "100vh" }}>
+        <div className="sidebar-content" style={{ height: "100%" }}>
           <a className="sidebar-brand  d-flex mb-0 flex-column align-items-center pt-0">
             <img src={Logo} style={{ height: "50px", marginTop: "30px" }} />
             <p className="mt-2">پنل مدیریت</p>
@@ -40,7 +41,8 @@ const MainLayout: React.FC = () => {
           </a>
         </nav>
         <main className="content">
-          <Config />
+          {/* <Config /> */}
+          <Registration />
         </main>
         <div className="footer"></div>
       </div>
