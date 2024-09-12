@@ -3,6 +3,8 @@ import { useForm, Controller } from "react-hook-form";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { IoCheckbox } from "react-icons/io5";
+import L from "leaflet";
+import MapComponent from "../features/identity/components/MapComponent";
 
 interface FormValues {
   firstName: string;
@@ -10,8 +12,9 @@ interface FormValues {
   email: string;
   phoneNumber: string;
   nationalId: string;
-  hasWebsite: boolean;
-  websiteUrl: string;
+  location: L.LatLng | null;
+  howDidYouHear: string;
+  gender: string;
 }
 
 function validateIranianNationalCode(code: string): boolean {
@@ -32,16 +35,20 @@ function validateIranianNationalCode(code: string): boolean {
 
 const Registration: React.FC = () => {
   const [isValidNationalId, setIsValidNationalId] = useState(false);
-  const [hasWebsite, setHasWebsite] = useState(false);
-  const [agree, setAgree] = useState(false);
+  const [center, setCenter] = useState<L.LatLngExpression>([37.2875, 49.5963]); // default map address
 
   const {
     control,
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
-  } = useForm<FormValues>();
+  } = useForm<FormValues>({
+    defaultValues: {
+      location: null,
+    },
+  });
 
   const nationalId = watch("nationalId");
 
@@ -53,15 +60,17 @@ const Registration: React.FC = () => {
   }, [nationalId]);
 
   const onSubmit = (data: FormValues) => {
-    console.log(data);
+    console.log("Form Data:", data);
   };
 
-  const handleAgreeChange = () => setAgree(!agree);
+  const handleLocationChange = (latlng: L.LatLng) => {
+    setValue("location", latlng);
+  };
 
   return (
     <div className="container mx-auto">
       <form
-        className="max-w-md mx-auto bg-white p-6 pt-4 pb-7 rounded-lg shadow-lg rtl"
+        className="max-w-md mx-auto p-2 pt-4 pb-7 rounded-lg shadow-lg rtl"
         onSubmit={handleSubmit(onSubmit)}
       >
         <h2 className="text-center mb-5 font-bold">
@@ -152,13 +161,17 @@ const Registration: React.FC = () => {
                 placeholder="Enter phone number"
                 value={field.value}
                 onChange={field.onChange}
+                maxLength="16"
+                type="tel"
                 defaultCountry="IR"
                 className={`border p-2 w-full rounded-md ${
                   errors.phoneNumber ? "border-red-500" : "border-gray-300"
                 }`}
               />
             )}
-            rules={{ required: "شماره تلفن اجباری است" }}
+            rules={{
+              required: "شماره تلفن اجباری است",
+            }}
           />
           {errors.phoneNumber && (
             <p className="text-red-500 text-sm mt-1">
@@ -177,8 +190,8 @@ const Registration: React.FC = () => {
             {...register("email", {
               required: "ایمیل اجباری است",
               pattern: {
-                value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-                message: "آدرس ایمیل معتبر نیست",
+                value: /^[^@]+@[^@]+\.[^@]+$/,
+                message: "ایمیل معتبر نیست",
               },
             })}
             className={`border p-2 w-full rounded-md ${
@@ -192,64 +205,81 @@ const Registration: React.FC = () => {
           )}
         </div>
 
-        {/* Toggle: آیا از قبل وب‌سایت دارید؟ */}
-        <div className="mb-4 flex items-center">
-          <label className="inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              className="sr-only peer"
-              checked={hasWebsite}
-              onChange={() => setHasWebsite(!hasWebsite)} // تغییر وضعیت تاگل
-            />
-            <div className="relative w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600"></div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-400 ms-3">
-              آیا از قبل وب‌سایت دارید؟
-            </span>
+        {/* طریقه آشنایی با شاپفا */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            طریقه آشنایی با شاپفا :
           </label>
+          <select
+            {...register("howDidYouHear", {
+              required: "لطفاً یکی از گزینه‌ها را انتخاب کنید",
+            })}
+            className={`border p-2 w-full rounded-md ${
+              errors.howDidYouHear ? "border-red-500" : "border-gray-300"
+            }`}
+          >
+            <option value="">انتخاب کنید</option>
+            <option value="friends">دوستان</option>
+            <option value="internetSearch">جستجوی اینترنتی</option>
+            <option value="socialMedia">شبکه‌های اجتماعی</option>
+            <option value="other">سایر</option>
+          </select>
+          {errors.howDidYouHear && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.howDidYouHear.message as string}
+            </p>
+          )}
         </div>
 
-        {hasWebsite && (
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-medium mb-2">
-              آدرس وب‌سایت :
-            </label>
-            <input
-              type="text"
-              {...register("websiteUrl")}
-              className="border p-2 w-full rounded-md border-gray-300"
-            />
-          </div>
-        )}
-
-        {/* Radio button: قوانین را مطالعه کردم */}
-        <div className="mb-4 flex items-center">
-          <input
-            id="link-radio"
-            type="radio"
-            value=""
-            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-            checked={agree}
-            onChange={handleAgreeChange}
-          />
-          <label
-            htmlFor="link-radio"
-            className="me-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-          >
-            قوانین را مطالعه کردم
-            <a
-              href="#"
-              className="text-blue-600 dark:text-blue-500 hover:underline ms-1"
-            >
-              (لینک)
-            </a>
+        {/* جنسیت */}
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-medium mb-2">
+            جنسیت :
           </label>
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="male"
+                {...register("gender", {
+                  required: "لطفاً جنسیت خود را انتخاب کنید",
+                })}
+                className="mr-2"
+              />
+              مرد
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="female"
+                {...register("gender", {
+                  required: "لطفاً جنسیت خود را انتخاب کنید",
+                })}
+                className="mr-2"
+              />
+              زن
+            </label>
+          </div>
+          {errors.gender && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.gender.message as string}
+            </p>
+          )}
+        </div>
+
+        {/* نقشه */}
+        <div className="mb-4 h-40">
+          <MapComponent
+            onLocationChange={handleLocationChange}
+            center={center}
+          />
         </div>
 
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
         >
-          ثبت‌نام
+          ارسال درخواست
         </button>
       </form>
     </div>
